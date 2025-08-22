@@ -10,7 +10,7 @@ R.: As seguintes bases de dados são utilizadas:
 
 - Microdados do Enem 2023 (Fonte: Inep)
 - Chamada Regular do SiSU 1/2023 (Fonte: MEC)
-- Microdados do Censo da Educação Superior (Fonte: Inep)
+- Microdados do Censo da Educação Superior 2023 (Fonte: Inep)
 - Base de dados das regionais de ensino tratada (fonte: Profissão Docente)
 - Base de municípios do IBGE para tratar a base de regionais de ensino (fonte: IBGE)
 
