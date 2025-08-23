@@ -1,0 +1,29 @@
+Planejamento da análise de dados
+
+1-) Qual é o objetivo dessa análise?
+
+R.: O objetivo desta análise é compreender a distribuição das bolsas do programa Pé-de-Meia Licenciaturas. Há a hipótese de que as bolsas não foram distribuídas de maneira eficiente, considerando as unidades regionais de ensino e componentes curriculares que precisam de docentes. 
+
+2-) Quais bases de dados são utilizadas?
+
+R.: As seguintes bases de dados são utilizadas:
+
+- Microdados do Enem 2023 (Fonte: Inep)
+- Chamada Regular do SiSU 1/2023 (Fonte: MEC)
+- Microdados do Censo da Educação Superior (Fonte: Inep)
+- Base de dados das regionais de ensino tratada (fonte: Profissão Docente)
+- Base de municípios do IBGE para tratar a base de regionais de ensino (fonte: IBGE)
+
+3-) Quais bibliotecas/pacotes são necessários? Justifique cada um deles.
+
+R.: As seguintes bibliotecas/pacotes serão utilizadas:
+
+a) data.table: importa arquivo .CSV (especialmente arquivos grandes)
+b) here: torna o código reproduzível (não utiliza caminhos da máquina local)
+c) arrow: trabalha com arquivos .parquet (útil para particionar tabelas e armazenar em serviços de cloud)
+d) aws.s3: conecta com serviços da AWS
+e) duckdb: trabalha com arquivos .parquet diretamente do s3 
+f) enderecobr: padroniza endereços de municípios
+g) glue: facilita construção de strng
+h) writexl: exporta para arquivo .xlsx
+i) targets: cria um pipeline (gestão de workflow)
