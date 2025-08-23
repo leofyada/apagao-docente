@@ -15,7 +15,7 @@ importa_pacotes <- function(pacotes){
 
 # Pacotes utilizados
 pacotes <- c(
-  "data.table", "archive", "here", "arrow", "dplyr", "readxl", "enderecobr", "stringi", "tidyr"
+  "data.table", "archive", "here", "arrow", "dplyr", "readxl", "enderecobr", "stringi", "tidyr", "writexl", "glue"
 )
 
 # Importa os pacotes

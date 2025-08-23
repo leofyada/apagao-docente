@@ -164,7 +164,7 @@ df_regionais_nidentificado <- df_regionais_padronizada %>% filter(is.na(no_munic
 nrow(df_regionais_nidentificado)
 
 # Remoção de arquivos
-rm(df_regionais_tratada, df_regionais_nidentificado, regionais_bruta, regional_dupla, df_ibge, df_ibge_filtrada, df_ibge_filtrada_padronizada, df_regionais_padronizada)
+rm(df_regionais_tratada, df_regionais_nidentificado, regionais_bruta, regional_dupla, df_ibge, df_ibge_filtrada, df_regionais_padronizada)
 # Limpeza do ambiente
 gc()
 
@@ -243,6 +243,7 @@ df_chamada_regular_sisu_20231 <- df_chamada_regular_sisu_20231 %>%
     TOP_650 = ifelse(NOTA_CANDIDATO >= 650, "acima_650", "abaixo_650")
   ) %>% 
   group_by(
+    UF_CAMPUS,
     UF_CAMPUS_AJ,
     MUNICIPIO_CAMPUS_AJ,
     NOME_CURSO_AJ_2,
@@ -258,9 +259,65 @@ df_chamada_regular_sisu_20231 <- df_chamada_regular_sisu_20231 %>%
     values_from = n
   )
 
+# Inclusão do código do município na base do SiSU
+df_chamada_regular_sisu_20231 <- df_chamada_regular_sisu_20231 %>%
+  rename(
+    "estado_padronizado" = "UF_CAMPUS_AJ",
+    "municipio_padronizado" = "MUNICIPIO_CAMPUS_AJ"
+  ) %>% 
+  left_join(y=df_ibge_filtrada_padronizada, by=c("estado_padronizado", "municipio_padronizado")) %>% 
+  select(UF_CAMPUS, co_uf, no_uf, co_municipio, no_municipio, NOME_CURSO_AJ_2, abaixo_550_abaixo_650, acima_550_abaixo_650, acima_550_acima_650)
+
 # Exporta arquivo de chamada de cursos de licenciatura no SiSU
 data.table::fwrite(x = df_chamada_regular_sisu_20231, file = here("data", "prata", "df_sisu_licenciatura.csv"))
 
 # Remove arquivos não utilizados
-rm(df_chamada_regular_sisu_20231, df_microdados_cursos, df_microdados_cursos_licenciatura)
+rm(df_chamada_regular_sisu_20231, df_microdados_cursos, df_microdados_cursos_licenciatura, df_ibge_filtrada_padronizada, df_regionais_padronizada_limpa)
 gc()
+
+#-----------------------------------------------------------------------------------
+#- 3-) Tratamento de dados de oferta e demanda para identificar "bolsas elegíveis" -
+#-----------------------------------------------------------------------------------
+
+# Importa base de oferta e demanda
+df_oferta_demanda <- readxl::read_xlsx(here("data", "bronze", "oferta_e_demanda.xlsx"))
+# Seleciona e renomeia as colunas
+df_oferta_demanda <- df_oferta_demanda %>% 
+  mutate(
+    no_curso_aj = curso |>
+      stri_trans_general("Latin-ASCII") |>
+      gsub("[[:punct:] ]", "", x = _) |>
+      tolower(),
+    demanda = `demanda educação infantil` + `demanda anos iniciais` + `demanda anos finais` + `demanda ensino médio`
+  ) %>% 
+  rename("sg_uf" = "UF") %>% 
+  select(sg_uf, regional, curso, no_curso_aj, vagas, concluintes, demanda)
+  
+
+# Cenários de "bolsas "elegíveis"
+df_oferta_demanda <- df_oferta_demanda %>% 
+  mutate(
+    cenario = case_when(
+      (demanda < vagas) & (vagas > concluintes) & (demanda > concluintes) ~ "Cenário 1",
+      vagas == 0 & concluintes == 0 ~ "Cenário 2",
+      (demanda > vagas) & (vagas > concluintes) ~ "Cenário 3",
+      (vagas > concluintes) & (demanda > concluintes) ~ "Cenário 4",
+      (concluintes >= vagas) & (concluintes >= demanda) ~ "Cenário 5",
+      demanda <= concluintes ~ "Cenário 6",
+      (vagas <= concluintes) & (vagas <= demanda) ~ "Cenário 7"
+    ),
+    qtd_bolsas_elegiveis = case_when(
+      cenario == "Cenário 1" ~ demanda - concluintes,
+      cenario %in% c("Cenário 3", "Cenário 4") ~ vagas - concluintes,
+      .default = 0
+    )
+  ) %>% 
+  select(-cenario)
+
+# Armazena base de oferta e demanda tratada
+data.table::fwrite(df_oferta_demanda, file=here("data", "prata", "df_oferta_demanda.csv"))
+# Remove arquivos
+rm(df_oferta_demanda)
+gc()
+
+
