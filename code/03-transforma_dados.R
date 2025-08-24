@@ -320,4 +320,36 @@ data.table::fwrite(df_oferta_demanda, file=here("data", "prata", "df_oferta_dema
 rm(df_oferta_demanda)
 gc()
 
+#------------------------------------------------------------------------------
+#- 3-) Dados das bolsas já distribuídas no âmbito do Pé-de-Meia Licenciaturas -
+#------------------------------------------------------------------------------
+
+# Importação da planilha Excel
+df_pedemeia <- readxl::read_xlsx(here("data", "bronze", "df_pedemeia.xlsx"), skip = 3)
+# Limpeza da base
+df_pedemeia_tratada <- df_pedemeia %>% 
+  select(-`2`) %>% 
+  rename(
+    "inscricao" = "INSCRICAO",
+    "nome" = "NOME",
+    "cpf" = "CPF",
+    "sg_ies" = "SIGLA IES",
+    "curso" = "CURSO",
+    "tipo" = "TIPO"
+  ) %>% 
+  mutate(
+    no_curso_aj = curso |>
+      stri_trans_general("Latin-ASCII") |>
+      gsub("[[:punct:] ]", "", x = _) |>
+      tolower(),
+    no_curso_aj_2 = case_when(
+      grepl("pedagogia", no_curso_aj) ~ "pedagogia",
+      grepl("linguaportuguesa", no_curso_aj) | grepl("letras", no_curso_aj) ~ "linguaportuguesa",
+      grepl("artes", no_curso_aj) ~ "artes",
+      grepl("biologi", no_curso_aj) ~ "biologia",
+      grepl("sociais", no_curso_aj) | grepl("sociologia", no_curso_aj) ~ "sociologia",
+      .default = no_curso_aj
+    )
+  )
+
 
