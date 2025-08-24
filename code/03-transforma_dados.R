@@ -320,4 +320,67 @@ data.table::fwrite(df_oferta_demanda, file=here("data", "prata", "df_oferta_dema
 rm(df_oferta_demanda)
 gc()
 
+#------------------------------------------------------------------------------
+#- 3-) Dados das bolsas já distribuídas no âmbito do Pé-de-Meia Licenciaturas -
+#------------------------------------------------------------------------------
+
+# Importação da base de IES do Censo de 2023
+cols <- c("NU_ANO_CENSO", "NO_UF_IES", "SG_UF_IES", "CO_UF_IES", "NO_MUNICIPIO_IES", "CO_MUNICIPIO_IES", "CO_IES", "NO_IES", "SG_IES")
+microdados_censosuperior_ies_23 <- read_parquet(here("data", "bronze", "MICRODADOS_ED_SUP_IES_2023.parquet"), col_select = cols)
+rm(cols)
+# Limpeza da base
+microdados_censosuperior_ies_23_tratada <- microdados_censosuperior_ies_23 %>% 
+  mutate(
+    sg_ies_aj = SG_IES |>
+      stri_trans_general("Latin-ASCII") |>
+      gsub("[[:punct:] ]", "", x = _) |>
+      tolower()
+  )
+
+# Importação da planilha Excel
+df_pedemeia <- readxl::read_xlsx(here("data", "bronze", "df_pedemeia.xlsx"), skip = 3)
+# Limpeza da base
+df_pedemeia_tratada <- df_pedemeia %>% 
+  select(-`2`) %>% 
+  rename(
+    "inscricao" = "INSCRICAO",
+    "nome" = "NOME",
+    "cpf" = "CPF",
+    "sg_ies" = "SIGLA IES",
+    "curso" = "CURSO",
+    "tipo" = "TIPO"
+  ) %>% 
+  mutate(
+    no_curso_aj = curso |>
+      stri_trans_general("Latin-ASCII") |>
+      gsub("[[:punct:] ]", "", x = _) |>
+      tolower(),
+    no_curso_aj_2 = case_when(
+      grepl("pedagogia", no_curso_aj) ~ "pedagogia",
+      grepl("linguaportuguesa", no_curso_aj) | grepl("letras", no_curso_aj) ~ "linguaportuguesa",
+      grepl("artes", no_curso_aj) ~ "artes",
+      grepl("biologi", no_curso_aj) ~ "biologia",
+      grepl("sociais", no_curso_aj) | grepl("sociologia", no_curso_aj) ~ "sociologia",
+      .default = no_curso_aj
+    ),
+    no_curso_aj_2 = gsub("^abi", "", no_curso_aj_2),
+    sg_ies_aj = sg_ies |>
+      stri_trans_general("Latin-ASCII") |>
+      gsub("[[:punct:] ]", "", x = _) |>
+      tolower()
+  )
+
+# Merge com dados de IES do Censo Superior de 2023
+df_pedemeia_tratada <- merge(x=df_pedemeia_tratada, y=microdados_censosuperior_ies_23_tratada, by="sg_ies_aj", all.x=T)
+df_pedemeia_tratada <- df_pedemeia_tratada %>% 
+  group_by(CO_MUNICIPIO_IES, no_curso_aj_2) %>% 
+  tally()
+
+# Exporta dados
+data.table::fwrite(x=df_pedemeia_tratada, file=here("data", "prata", "df_bolsas_distribuidas.csv"))
+# Remove arquivos não utilizados
+rm(df_pedemeia, df_pedemeia_tratada, microdados_censosuperior_ies_23, microdados_censosuperior_ies_23_tratada)
+
+
+
 
