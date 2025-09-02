@@ -12,15 +12,15 @@ df_analise_final <- readxl::read_xlsx(path = here("data", "ouro", glue("2025-08-
 
 g_1 <- df_analise_final %>% 
   group_by(sg_uf) %>% 
-  reframe(match_650 = sum(match_650, na.rm=T), qtd_bolsas_distribuidas = sum(qtd_bolsas_distribuidas, na.rm=T))
+  reframe(match_550 = sum(match_550, na.rm=T), match_650 = sum(match_650, na.rm=T), qtd_bolsas_distribuidas = sum(qtd_bolsas_distribuidas, na.rm=T))
 g_1 <- reshape2::melt(data=g_1)
 
 g_1 <- ggplot(g_1, aes(x = reorder(sg_uf, value), y = value, fill = variable)) +
   geom_col(position = "identity") +
   coord_flip() +
   scale_fill_manual(
-    values = c(match_650 = "darkblue", qtd_bolsas_distribuidas = "#00008B1A"),
-    labels = c(match_650 = "match_650", qtd_bolsas_distribuidas = "Bolsas distribuídas")
+    values = c(match_650 = "darkblue", match_550 = "#00008B80", qtd_bolsas_distribuidas = "#00008B1A"),
+    labels = c(match_650 = "Match 650", match_550 = "Match 550", qtd_bolsas_distribuidas = "Bolsas distribuídas")
   ) +
   theme(
     panel.grid.major.y = element_blank(),
@@ -36,15 +36,15 @@ ggsave(here("output", "match_650_bolsas_uf.png"), plot = g_1, width = 8, height 
 
 g_2 <- df_analise_final %>% 
   group_by(no_curso_aj) %>% 
-  reframe(match_650 = sum(match_650, na.rm=T), qtd_bolsas_distribuidas = sum(qtd_bolsas_distribuidas, na.rm=T))
+  reframe(match_550 = sum(match_550, na.rm=T), match_650 = sum(match_650, na.rm=T), qtd_bolsas_distribuidas = sum(qtd_bolsas_distribuidas, na.rm=T))
 g_2 <- reshape2::melt(data=g_2)
 
 g_2 <- ggplot(g_2, aes(x = reorder(no_curso_aj, value), y = value, fill = variable)) +
   geom_col(position = "identity") +
   coord_flip() +
   scale_fill_manual(
-    values = c(match_650 = "darkblue", qtd_bolsas_distribuidas = "#00008B1A"),
-    labels = c(match_650 = "match_650", qtd_bolsas_distribuidas = "Bolsas distribuídas")
+    values = c(match_650 = "darkblue", match_550 = "#00008B80", qtd_bolsas_distribuidas = "#00008B1A"),
+    labels = c(match_650 = "Match 650", match_550 = "Match 550", qtd_bolsas_distribuidas = "Bolsas distribuídas")
   ) +
   theme(
     panel.grid.major.y = element_blank(),
@@ -168,11 +168,5 @@ g_6 <- ggplot(g_6,
   )
 
 ggsave(here("output", "match_550_versus_bolsas.png"), plot = g_6, width = 8, height = 6, units = "in")
-
-
-
-
-
-
 
 
